@@ -19,68 +19,24 @@
   },
   "anchors": [
     {
-      "title": "Documentation",
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/Goose-Kafka/goose"
+    },
+    {
+      "name": "Docs",
       "icon": "book",
-      "pages": [
-        "introduction/overview",
-        "introduction/quick-start",
-        "introduction/architecture"
-      ]
+      "url": "/introduction/overview"
     },
     {
-      "title": "Configuration",
-      "icon": "settings",
-      "pages": [
-        "configuration/overview",
-        "configuration/kafka",
-        "configuration/worker-pool",
-        "configuration/error-handling",
-        "configuration/circuit-breaker",
-        "configuration/dlq",
-        "configuration/filtering",
-        "configuration/schema",
-        "configuration/validation",
-        "configuration/observability",
-        "configuration/oauth2"
-      ]
-    },
-    {
-      "title": "Sinks",
+      "name": "Sinks",
       "icon": "arrow-right",
-      "pages": [
-        "sinks/http",
-        "sinks/grpc",
-        "sinks/mongodb",
-        "sinks/postgresql",
-        "sinks/redis"
-      ]
+      "url": "/sinks/http"
     },
     {
-      "title": "Guides",
+      "name": "Guides",
       "icon": "compass",
-      "pages": [
-        "guides/scaling",
-        "guides/proto-to-json",
-        "guides/cel-filtering",
-        "guides/multi-instance"
-      ]
-    },
-    {
-      "title": "Observability",
-      "icon": "chart",
-      "pages": [
-        "observability/metrics",
-        "observability/tracing",
-        "observability/grafana"
-      ]
-    },
-    {
-      "title": "Deploy",
-      "icon": "cloud",
-      "pages": [
-        "deploy/docker",
-        "deploy/kubernetes"
-      ]
+      "url": "/guides/scaling"
     }
   ],
   "navigation": {
