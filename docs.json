@@ -26,7 +26,7 @@
     {
       "name": "Docs",
       "icon": "book",
-      "url": "/introduction/overview"
+      "url": "/introduction/what-is-goose"
     },
     {
       "name": "Sinks",
@@ -44,7 +44,7 @@
       {
         "tab": "Documentation",
         "pages": [
-          "introduction/overview",
+          "introduction/what-is-goose",
           "introduction/quick-start",
           "introduction/architecture",
           "configuration/overview",
