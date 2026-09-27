@@ -1,15 +1,58 @@
 ---
 title: Goose
-subtitle: Lightweight Kafka-to-Sink Firehose
-description: Cloud-native Kafka consumer that delivers streaming data to HTTP, gRPC, MongoDB, PostgreSQL, and Redis sinks.
-navigation: false
+description: Lightweight Kafka-to-Sink Firehose — HTTP, gRPC, MongoDB, PostgreSQL, Redis
 ---
 
-<Header title="Talk to me, Goose" subtitle="Lightweight Kafka-to-Sink Firehose" logo="/goose.png" />
+<Hero
+  title="Talk to me, Goose"
+  subtitle="Lightweight Kafka-to-Sink Firehose"
+  image="/logo/dark.svg"
+  primaryAction={{
+    text: "Quick Start",
+    href: "/introduction/quick-start"
+  }}
+  secondaryAction={{
+    text: "GitHub",
+    href: "https://github.com/Goose-Kafka/goose"
+  }}
+/>
 
-<br />
+---
 
-<CardGroup cols={2}>
+## What Goose Does
+
+Goose is a cloud-native Kafka consumer that delivers streaming data to multiple sink types — HTTP REST, gRPC, MongoDB, PostgreSQL, and Redis — with at-least-once delivery, circuit breaker, schema conversion, and full observability.
+
+<AccordionGroup>
+  <Accordion title="At-Least-Once Delivery">
+    Contiguity-gated offset commits ensure no message is lost. Network errors are automatically retried. Failed messages go to a Dead Letter Queue (DLQ) for investigation.
+  </Accordion>
+  <Accordion title="Schema Conversion">
+    JSON passthrough for JSON messages. Protobuf→JSON conversion via Stencil schema registry with long-polling refresh — hot-swap descriptors without restart.
+  </Accordion>
+  <Accordion title="CEL Filtering">
+    Filter messages with CEL (Common Expression Language) expressions — Google's modern alternative to JEXL. Supports AND/OR, comparisons, IN, has(), string methods, and nested fields.
+  </Accordion>
+  <Accordion title="Schema Validation">
+    Validate messages with CEL expressions before delivery. Invalid messages go to DLQ — catch bad data at the firehose level, not in your downstream services.
+  </Accordion>
+  <Accordion title="Circuit Breaker">
+    Built-in circuit breaker with sliding window. Opens when failure rate exceeds threshold, pauses outbound calls, probes after timeout, and resumes when the sink recovers.
+  </Accordion>
+  <Accordion title="Connection TTL">
+    Connections are closed after TTL and re-opened, redistributing traffic across backend pods. Fixes the connection pinning bug found in raystack firehose.
+  </Accordion>
+  <Accordion title="5 Sink Types">
+    HTTP REST (individual + batch + batch-with-response), gRPC (raw protobuf passthrough), MongoDB (insert + upsert), PostgreSQL (insert + upsert), Redis (keyvalue + hashset + list).
+  </Accordion>
+  <Accordion title="Full Observability">
+    15 Prometheus metrics, OpenTelemetry traces (Jaeger/Tempo), Loki log aggregation, and 3 pre-built Grafana dashboards.
+  </Accordion>
+</AccordionGroup>
+
+## Quick Links
+
+<CardGroup cols={3}>
   <Card title="Quick Start" icon="rocket" href="/introduction/quick-start">
     Get Goose running in under 2 minutes
   </Card>
@@ -19,13 +62,47 @@ navigation: false
   <Card title="Sinks" icon="arrow-right" href="/sinks/http">
     HTTP, gRPC, MongoDB, PostgreSQL, Redis
   </Card>
-  <Card title="Filters & Validation" icon="filter" href="/configuration/filtering">
-    JSONPath + CEL filtering and schema validation
+  <Card title="Filters" icon="filter" href="/configuration/filtering">
+    JSONPath + CEL filtering
   </Card>
   <Card title="Observability" icon="chart" href="/observability/metrics">
-    Prometheus metrics, OTel traces, Loki logs
+    Prometheus + OTel + Loki
   </Card>
   <Card title="Deploy" icon="cloud" href="/deploy/kubernetes">
-    Helm chart, Docker, K8s deployment guide
+    Helm chart, Docker, K8s
+  </Card>
+</CardGroup>
+
+## Key Metrics
+
+<Callout type="info">
+  Goose is ~33MB binary, ~30MB RAM at idle, <1s startup — 25x smaller than raystack firehose (786MB Java).
+</Callout>
+
+| Metric | Goose | Raystack (Java) |
+|--------|-------|-----------------|
+| Binary size | ~33MB | 164MB jar |
+| RAM at idle | ~30MB | ~200–300MB |
+| CPU at 2,500/s | ~0.6 vCPU | ~2–3 vCPU |
+| Startup | <1s | 5–10s |
+| Dependencies | 9 | 50+ |
+
+## Sink Types
+
+<CardGroup cols={3}>
+  <Card title="HTTP REST" icon="globe" href="/sinks/http">
+    Individual, batch, and batch-with-response modes
+  </Card>
+  <Card title="gRPC" icon="code" href="/sinks/grpc">
+    Raw protobuf passthrough — no conversion needed
+  </Card>
+  <Card title="MongoDB" icon="database" href="/sinks/mongodb">
+    Insert and upsert modes with duplicate key handling
+  </Card>
+  <Card title="PostgreSQL" icon="table" href="/sinks/postgresql">
+    Auto column mapping, INSERT and ON CONFLICT upsert
+  </Card>
+  <Card title="Redis" icon="zap" href="/sinks/redis">
+    Keyvalue, hashset, and list with key templating and TTL
   </Card>
 </CardGroup>

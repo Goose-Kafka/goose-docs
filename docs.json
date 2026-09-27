@@ -1,82 +1,108 @@
 {
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "linden",
   "name": "Goose",
-  "theme": "willow",
   "colors": {
-    "primary": "#0A0E27",
-    "light": "#1A1F3A",
-    "dark": "#050714"
+    "primary": "#3B82F6",
+    "light": "#60A5FA",
+    "dark": "#2563EB"
   },
-  "favicon": "/favicon.ico",
-  "topbarLinks": [
-    {
-      "name": "GitHub",
-      "url": "https://github.com/Goose-Kafka/goose"
-    }
-  ],
-  "topbarCtaButton": {
-    "name": "Get Started",
-    "url": "/introduction/quick-start"
+  "appearance": {
+    "default": "dark",
+    "strict": false
   },
-  "anchors": [
-    {
-      "name": "GitHub",
-      "icon": "github",
-      "url": "https://github.com/Goose-Kafka/goose"
-    },
-    {
-      "name": "Docs",
-      "icon": "book",
-      "url": "/introduction/what-is-goose"
-    },
-    {
-      "name": "Sinks",
-      "icon": "arrow-right",
-      "url": "/sinks/http"
-    },
-    {
-      "name": "Guides",
-      "icon": "compass",
-      "url": "/guides/scaling"
-    }
-  ],
+  "fonts": {
+    "family": "Sora",
+    "weight": 400
+  },
+  "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
       {
         "tab": "Documentation",
-        "pages": [
-          "introduction/what-is-goose",
-          "introduction/quick-start",
-          "introduction/architecture",
-          "configuration/overview",
-          "configuration/kafka",
-          "configuration/worker-pool",
-          "configuration/error-handling",
-          "configuration/circuit-breaker",
-          "configuration/dlq",
-          "configuration/filtering",
-          "configuration/schema",
-          "configuration/validation",
-          "configuration/observability",
-          "configuration/oauth2",
-          "sinks/http",
-          "sinks/grpc",
-          "sinks/mongodb",
-          "sinks/postgresql",
-          "sinks/redis",
-          "guides/scaling",
-          "guides/proto-to-json",
-          "guides/cel-filtering",
-          "guides/multi-instance",
-          "observability/metrics",
-          "observability/tracing",
-          "observability/grafana",
-          "deploy/docker",
-          "deploy/kubernetes"
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction/what-is-goose",
+              "introduction/quick-start",
+              "introduction/architecture"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/overview",
+              "configuration/kafka",
+              "configuration/worker-pool",
+              "configuration/error-handling",
+              "configuration/circuit-breaker",
+              "configuration/dlq",
+              "configuration/filtering",
+              "configuration/schema",
+              "configuration/validation",
+              "configuration/observability",
+              "configuration/oauth2"
+            ]
+          },
+          {
+            "group": "Sinks",
+            "pages": [
+              "sinks/http",
+              "sinks/grpc",
+              "sinks/mongodb",
+              "sinks/postgresql",
+              "sinks/redis"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/scaling",
+              "guides/proto-to-json",
+              "guides/cel-filtering",
+              "guides/multi-instance"
+            ]
+          },
+          {
+            "group": "Observability",
+            "pages": [
+              "observability/metrics",
+              "observability/tracing",
+              "observability/grafana"
+            ]
+          },
+          {
+            "group": "Deploy",
+            "pages": [
+              "deploy/docker",
+              "deploy/kubernetes"
+            ]
+          }
         ]
       }
     ]
   },
-  "footerSocials": {
-    "github": "https://github.com/Goose-Kafka/goose"
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/Goose-Kafka/goose"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Quick Start",
+      "href": "/introduction/quick-start"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/Goose-Kafka/goose"
+    }
   }
 }

@@ -1,42 +1,75 @@
 ---
-title: Overview
-description: What is Goose and why use it
+title: What is Goose
+description: Goose is a lightweight, cloud-native Kafka consumer that delivers streaming data to HTTP, gRPC, MongoDB, PostgreSQL, and Redis sinks.
 ---
 
-# Overview
+# What is Goose
 
 > _"Talk to me, Goose." — Maverick, Top Gun (1986)_
 
 Goose is a lightweight, cloud-native Kafka consumer that delivers streaming data to multiple sink types — HTTP REST, gRPC, MongoDB, PostgreSQL, and Redis.
 
+Inspired by **Goose** from _Top Gun_ — the trusted RIO (Radar Intercept Officer) who feeds critical data to Maverick in real-time, never misses a callout, and always has his pilot's back.
+
+<Tip>
+  New to Goose? Check out the [Quick Start](/introduction/quick-start) to get running in under 2 minutes.
+</Tip>
+
 ## What Goose Does
 
-Goose sits between Kafka and your downstream services. It consumes messages from Kafka topics and delivers them to configured endpoints with:
-
-- **At-least-once delivery** — offset commits with contiguity-gated logic
-- **Retry + DLQ** — failed messages retried, then dead-lettered if exhausted
-- **Circuit breaker** — pauses when downstream is down, resumes on recovery
-- **Schema conversion** — protobuf→JSON via Stencil schema registry
-- **Filtering** — JSONPath and CEL expressions
-- **Validation** — CEL-based message validation before delivery
-- **Observability** — 15 Prometheus metrics + OTel traces + Loki logs
+<AccordionGroup>
+  <Accordion title="Kafka Consumer">
+    Consumes messages from Kafka topics using batch-poll (up to 500 messages per poll cycle). Supports consumer groups for horizontal scaling.
+  </Accordion>
+  <Accordion title="Schema Conversion">
+    JSON passthrough or Protobuf→JSON conversion via Stencil schema registry with long-polling refresh.
+  </Accordion>
+  <Accordion title="Validation & Filtering">
+    CEL-based schema validation ensures message quality. JSONPath and CEL filtering drops unwanted messages before delivery.
+  </Accordion>
+  <Accordion title="Delivery & Error Handling">
+    At-least-once delivery with contiguity-gated offset commits. Config-driven retry → DLQ → circuit breaker. Network errors always retried — zero message drops.
+  </Accordion>
+  <Accordion title="Observability">
+    15 Prometheus metrics, OpenTelemetry traces (consumer + worker spans), Loki log aggregation, and 3 pre-built Grafana dashboards.
+  </Accordion>
+</AccordionGroup>
 
 ## Sink Types
 
-| Sink | Config | Use Case |
-|------|--------|----------|
-| HTTP REST | `SINK_TYPE=http` | Call REST APIs, webhooks, payment processors |
-| gRPC | `SINK_TYPE=grpc` | Internal microservices (raw protobuf passthrough) |
-| MongoDB | `SINK_TYPE=mongodb` | Store documents, payment records |
-| PostgreSQL | `SINK_TYPE=postgresql` | Relational data, audit trails |
-| Redis | `SINK_TYPE=redis` | Cache status, rate limiting, key-value |
+<CardGroup cols={3}>
+  <Card title="HTTP REST" icon="globe" href="/sinks/http">
+    POST/PUT with individual, batch, and batch-with-response modes
+  </Card>
+  <Card title="gRPC" icon="code" href="/sinks/grpc">
+    Raw protobuf passthrough — no Stencil needed
+  </Card>
+  <Card title="MongoDB" icon="database" href="/sinks/mongodb">
+    Insert and upsert with duplicate key → DLQ
+  </Card>
+  <Card title="PostgreSQL" icon="table" href="/sinks/postgresql">
+    Auto column mapping, INSERT and ON CONFLICT upsert
+  </Card>
+  <Card title="Redis" icon="zap" href="/sinks/redis">
+    Keyvalue, hashset, list with key templating and TTL
+  </Card>
+</CardGroup>
 
-## Key Metrics
+## Tech Stack
 
-| Metric | Value |
-|--------|-------|
-| Binary size | ~33MB |
-| RAM at idle | ~30MB |
-| Startup time | <1s |
-| Dependencies | 9 |
-| Max throughput | 2,500+ msg/s (single pod, 100ms latency) |
+| Component | Technology |
+|-----------|-----------|
+| Language | Go 1.22+ |
+| Kafka client | segmentio/kafka-go |
+| HTTP client | Go net/http (connection pool + TTL) |
+| Metrics | Prometheus client_golang |
+| Tracing | OpenTelemetry (OTLP gRPC) |
+| Filtering | CEL (cel-go) + JSONPath |
+| Protobuf | google.golang.org/protobuf (DynamicMessage) |
+| Database drivers | lib/pq (PostgreSQL), mongo-driver (MongoDB), go-redis (Redis) |
+| Docker | Distroless (~33MB) |
+| K8s | Helm chart |
+
+<Callout type="info">
+  Goose has 9 dependencies — vs 50+ in Java-based alternatives. No JVM, no classpath issues, no Lombok/Gradle version conflicts.
+</Callout>
