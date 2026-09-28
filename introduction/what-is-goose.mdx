@@ -59,7 +59,7 @@ Inspired by **Goose** from _Top Gun_ — the trusted RIO (Radar Intercept Office
 
 | Component | Technology |
 |-----------|-----------|
-| Language | Go 1.22+ |
+| Language | Go 1.27+ |
 | Kafka client | segmentio/kafka-go |
 | HTTP client | Go net/http (connection pool + TTL) |
 | Metrics | Prometheus client_golang |
@@ -72,4 +72,10 @@ Inspired by **Goose** from _Top Gun_ — the trusted RIO (Radar Intercept Office
 
 <Callout type="info">
   Goose has 9 dependencies — vs 50+ in Java-based alternatives. No JVM, no classpath issues, no Lombok/Gradle version conflicts.
+</Callout>
+
+## Performance
+
+<Callout type="info">
+  Benchmarked 2026-09-28 on kind K8s (1 pod, 1 Kafka partition): **6,017 msg/s** at 0ms sink delay, **~4,000 msg/s** at 50ms, **~800 msg/s** in ordered mode (`POOL=1`) — all with **zero drops** and **13–23 MiB** memory. The batch-poll consumer with chunk splitting improved throughput by +60% and cut memory by 23–57% vs the previous baseline. See [Load Test Results](/benchmarking/load-test-results).
 </Callout>

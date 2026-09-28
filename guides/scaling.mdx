@@ -14,14 +14,21 @@ Max concurrent sink calls = goose_pods × workers_per_pod
 Max throughput = concurrent_calls × (1000 / endpoint_latency_ms)
 ```
 
+<Callout type="info">
+  Measured per-pod throughput (2026-09-28, 1 pod, 1 partition): ~6,000/s at 0ms sink delay and ~4,000/s at 50ms with `WORKER_POOL_SIZE=100, MAX_POLL_RECORDS=500`. Ordered mode (`POOL=1`) runs ~800/s. See [Load Test Results](/benchmarking/load-test-results) for the full report.
+</Callout>
+
 ## Example Configurations
 
-| Partitions | Pods | Workers | Latency | Throughput |
-|-----------|------|---------|---------|------------|
-| 3 | 3 | 50 | 100ms | ~1,500/s |
-| 10 | 10 | 50 | 100ms | ~5,000/s |
-| 10 | 10 | 50 | 5ms | ~100,000/s |
-| 50 | 50 | 50 | 100ms | ~25,000/s |
+The per-pod numbers below use actual benchmarked throughput (50ms sink delay, multi-worker mode). Scale by pods up to the partition count.
+
+| Partitions | Pods | Workers | Latency | Throughput (approx) |
+|-----------|------|---------|---------|---------------------|
+| 1 | 1 | 100 | 50ms | ~4,000/s |
+| 1 | 1 | 1 | 0ms (ordered) | ~800/s |
+| 3 | 3 | 100 | 50ms | ~12,000/s |
+| 10 | 10 | 100 | 50ms | ~40,000/s |
+| 10 | 10 | 100 | 0ms | ~60,000/s |
 
 ## K8s Resource Limits
 
@@ -40,4 +47,4 @@ resources:
 - [ ] Kafka partitions ≥ desired max pods
 - [ ] `SINK_WORKER_POOL_SIZE` matches CPU limits
 - [ ] `SINK_HTTP_MAX_CONNECTIONS` = `SINK_WORKER_POOL_SIZE` (auto-matched)
-- [ ] `MAX_POLL_RECORDS × HTTP_latency < max.poll.interval_ms`
+- [ ] `SOURCE_KAFKA_CONSUMER_CONFIG_MAX_POLL_RECORDS` × HTTP_latency < `SOURCE_KAFKA_MAX_POLL_INTERVAL_MS`

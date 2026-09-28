@@ -35,6 +35,8 @@
               "configuration/overview",
               "configuration/kafka",
               "configuration/worker-pool",
+              "configuration/batch-poll",
+              "configuration/batch-mode",
               "configuration/error-handling",
               "configuration/circuit-breaker",
               "configuration/dlq",
@@ -42,7 +44,8 @@
               "configuration/schema",
               "configuration/validation",
               "configuration/observability",
-              "configuration/oauth2"
+              "configuration/oauth2",
+              "configuration/sink-configs"
             ]
           },
           {
@@ -77,6 +80,12 @@
             "pages": [
               "deploy/docker",
               "deploy/kubernetes"
+            ]
+          },
+          {
+            "group": "Benchmarking",
+            "pages": [
+              "benchmarking/load-test-results"
             ]
           }
         ]

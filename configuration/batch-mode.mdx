@@ -1,0 +1,88 @@
+---
+title: HTTP Batch Mode
+description: Batch delivery modes for HTTP sink
+---
+
+# HTTP Batch Mode
+
+The HTTP sink supports three delivery modes, controlled by `SINK_HTTP_BATCH_MODE`.
+
+## Modes
+
+| Mode | Value | Behavior |
+|------|-------|----------|
+| Individual | `none` (default) | One POST per message |
+| All-or-nothing | `all_or_nothing` | All messages in one POST, all retry on any failure |
+| Batch-with-response | `with_response` | Batch POST, endpoint returns per-message results |
+
+## Configuration
+
+| Env Var | Default | Description |
+|---------|---------|-------------|
+| `SINK_HTTP_BATCH_MODE` | `none` | Delivery mode |
+| `SINK_HTTP_BATCH_MAX_SIZE` | `500` | Max messages per batch POST |
+| `SINK_HTTP_BATCH_SEQ_FIELD` | `_goose_seq` | Sequence field name added to each message |
+| `SINK_HTTP_BATCH_RESPONSE_PATH` | `results` | JSON path to results array in response |
+| `SINK_HTTP_BATCH_RESPONSE_SEQ_FIELD` | `seq` | Field name for sequence in response |
+| `SINK_HTTP_BATCH_RESPONSE_STATUS_FIELD` | `status` | Field name for per-message status |
+| `SINK_HTTP_BATCH_RESPONSE_ERROR_FIELD` | `error` | Field name for error message |
+| `SINK_HTTP_BATCH_RESPONSE_RETRY_FLAG` | `is_retryable` | Field name for retryable flag |
+| `SINK_HTTP_BATCH_RESPONSE_SUCCESS_VALUE` | `success` | Value meaning success |
+
+## Individual Mode (default)
+
+Each message gets its own HTTP POST. Simple and reliable.
+
+```
+Message 1 → POST {message1} → 200 OK
+Message 2 → POST {message2} → 200 OK
+Message 3 → POST {message3} → 500 → retry → DLQ
+```
+
+## All-or-Nothing Mode
+
+All messages in a batch are sent in a single POST. If the endpoint returns non-2xx, the entire batch is retried.
+
+```
+Batch [msg1, msg2, msg3] → POST {"messages": [msg1, msg2, msg3]} → 200 OK (all succeed)
+```
+
+<Warning>
+If any message fails, the entire batch retries. This can amplify load if one message consistently fails.
+</Warning>
+
+## Batch-with-Response Mode
+
+All messages sent in one POST with a `_goose_seq` index. The endpoint returns per-message results, allowing partial success.
+
+### Request Format
+
+```json
+{
+  "messages": [
+    {"_goose_seq": 0, "id": "msg-1", "event": "created"},
+    {"_goose_seq": 1, "id": "msg-2", "event": "updated"},
+    {"_goose_seq": 2, "id": "msg-3", "event": "deleted"}
+  ]
+}
+```
+
+### Expected Response Format
+
+```json
+{
+  "results": [
+    {"seq": 0, "status": "success"},
+    {"seq": 1, "status": "error", "error": "not found", "is_retryable": false},
+    {"seq": 2, "status": "success"}
+  ]
+}
+```
+
+### Per-Message Routing
+
+| Response | Action |
+|----------|--------|
+| `status` == `success` | Mark as delivered |
+| `status` != `success` and `is_retryable` == true | Retry the message |
+| `status` != `success` and `is_retryable` == false | Send to DLQ |

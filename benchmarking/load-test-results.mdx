@@ -1,0 +1,79 @@
+---
+title: Load Test Results
+description: Goose benchmark results on Kubernetes
+---
+
+# Load Test Results
+
+## Batch-Poll Consumer Benchmark (2026-09-28)
+
+Test environment: kind K8s cluster, single worker node.
+
+### Infrastructure
+
+| Component | Config |
+|-----------|--------|
+| Goose | 1 pod, no resource limits, distroless image |
+| Kafka | 1 broker (apache/kafka:3.7.1 KRaft), 1 partition |
+| Mock HTTP | 3 replicas (configurable delay) |
+
+### Results
+
+#### 50ms sink delay (realistic)
+
+| Metric | Value |
+|--------|-------|
+| Messages | 50,000 |
+| Sink delay | 50ms + 10ms jitter |
+| Drain time | ~12s |
+| **Throughput** | **~4,000 msg/s** |
+| Memory | 23 MiB |
+| 200 OK | 49,999 (zero drops) |
+| DLQ | 0 |
+| Circuit breaker opens | 0 |
+
+#### 0ms sink delay (max throughput)
+
+| Metric | Value |
+|--------|-------|
+| Messages | 50,000 |
+| Drain time | 8.3s |
+| **Throughput** | **6,017 msg/s** |
+| Memory | 13 MiB |
+| 200 OK | 149,999 (cumulative, zero drops) |
+
+#### Ordered mode (POOL=1, POLL=1)
+
+| Metric | Value |
+|--------|-------|
+| Messages | 100,000 |
+| Drain time | ~125s |
+| **Throughput** | **~800 msg/s** |
+| Memory | 21 MiB |
+| 200 OK | 99,999 (zero drops) |
+
+### Comparison with Previous Baseline (2026-07-13)
+
+| Metric | Old (single-poll) | New (batch-poll) | Improvement |
+|--------|-------------------|------------------|-------------|
+| Throughput @50ms | 2,500/s | ~4,000/s | **+60%** |
+| Memory | 30 MiB | 13-23 MiB | **-23% to -57%** |
+| Message drops | 1,058 | 0 | **100% fixed** |
+| Max connections | 10 (hardcoded) | 250 (auto-matched) | **25x** |
+
+### Latency Distribution (0ms delay)
+
+```
+≤1ms:   92% of HTTP calls
+≤5ms:   99.9%
+≤10ms:  100%
+Average: 0.55ms per HTTP call
+```
+
+### Latency Distribution (50ms delay)
+
+```
+≤50ms:   40.6%
+≤100ms:  100%
+Average: 51.3ms per HTTP call (matches configured 50ms + 10ms jitter)
+```

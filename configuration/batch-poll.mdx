@@ -1,0 +1,62 @@
+---
+title: Batch-Poll Consumer
+description: How batch-poll consumer works with chunk splitting
+---
+
+# Batch-Poll Consumer
+
+Goose uses a batch-poll consumer that reads multiple messages per Kafka poll cycle, then splits them into chunks for parallel processing.
+
+## How It Works
+
+1. **First read**: `ReadMessage()` blocks until a message arrives (consumer-group aware)
+2. **Subsequent reads**: `ReadMessage()` with 100ms timeout — collects up to `MAX_POLL_RECORDS` messages
+3. **Chunk splitting**: polled messages split into chunks of `WORKER_POOL_SIZE`
+4. **Parallel dispatch**: each chunk sent as a separate batch to the worker pool
+5. **Backpressure**: consumer blocks on `batchChan` when workers are busy
+
+## Configuration
+
+| Env Var | Default | Description |
+|---------|---------|-------------|
+| `SOURCE_KAFKA_CONSUMER_CONFIG_MAX_POLL_RECORDS` | `100` | Max messages per poll cycle |
+
+<Warning>
+Goose uses `ReadMessage` (not `FetchMessage`). The `FetchMessage` API in segmentio/kafka-go blocks forever when a `GroupID` is set — this is a known quirk. `ReadMessage` works correctly with consumer groups.
+</Warning>
+
+## Ordered Mode (POOL=1)
+
+When `SINK_WORKER_POOL_SIZE=1`, goose processes messages one at a time in strict Kafka offset order. This is the safest mode — no ordering issues, no dependency problems.
+
+| Metric | Value (0ms sink delay) |
+|--------|----------------------|
+| Throughput | ~800 msg/s |
+| Memory | ~21 MiB |
+| Ordering | Strict (offset order) |
+
+<Callout type="info">
+At 50ms sink delay, ordered mode throughput is ~20 msg/s (1 / 0.05s). Use multi-worker mode for high-throughput scenarios where messages are independent.
+</Callout>
+
+## Multi-Worker Mode (POOL>1)
+
+When `SINK_WORKER_POOL_SIZE>1`, goose splits each poll batch into chunks of `WORKER_POOL_SIZE` and processes them in parallel. Messages within a chunk may be processed concurrently — only use this when messages are independent.
+
+| Config | Throughput (0ms) | Throughput (50ms) | Memory |
+|--------|-----------------|------------------|--------|
+| POOL=1, POLL=1 | ~800/s | ~20/s | 21 MiB |
+| POOL=100, POLL=500 | 6,017/s | ~4,000/s | 13-23 MiB |
+
+## When to Use Which Mode
+
+| Scenario | Recommended Config | Why |
+|----------|-------------------|-----|
+| Messages are dependent (m10 needs m1 first) | POOL=1, POLL=1 | Strict ordering prevents out-of-order processing |
+| Messages are independent | POOL=50-100, POLL=500 | Maximum throughput via parallelism |
+| Low latency requirement | POOL=10, POLL=50 | Balance between throughput and resource usage |
+| Backend can't handle parallelism | POOL=1, POLL=1 | Don't overwhelm the sink |
+
+<Warning>
+If messages within a partition are dependent (e.g., m10 depends on m1 succeeding), you MUST use POOL=1. With POOL>1, m10's HTTP call might complete before m1's, causing data consistency issues.
+</Warning>

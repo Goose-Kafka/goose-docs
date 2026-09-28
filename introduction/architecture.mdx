@@ -13,11 +13,14 @@ Kafka Topic
     ▼
 ┌───────────────────────────────────────────────────────────┐
 │  Consumer Goroutine (1)                                   │
-│  • Batch-poll: FetchMessage loop (up to MAX_POLL_RECORDS) │
+│  • Batch-poll: ReadMessage loop (up to MAX_POLL_RECORDS)  │
+│    - First ReadMessage() blocks until a message arrives   │
+│    - Subsequent ReadMessage() with 100ms timeout          │
 │  • Schema deserialize (protobuf→JSON or JSON passthrough)  │
 │  • Validate (CEL expressions)                              │
 │  • Apply filter (JSONPath or CEL expression)              │
-│  • Create Batch with UUID                                 │
+│  • Split polled messages into chunks of WORKER_POOL_SIZE  │
+│  • Each chunk → separate Batch with UUID                  │
 │  • Register offsets in OffsetManager                       │
 │  • batchChan <- batch  ← BLOCKS if full (backpressure)    │
 └─────────────────────┬─────────────────────────────────────┘
@@ -47,7 +50,11 @@ Kafka Topic
 `batchChan <- batch` blocks the consumer when workers are busy. No spin loops, no CPU waste.
 
 ### Batch-poll consumer
-Polls up to `MAX_POLL_RECORDS` messages per cycle using `FetchMessage`, creating a single batch from all passed messages. Reduces Kafka overhead by up to 500x.
+Polls up to `MAX_POLL_RECORDS` messages per cycle using `ReadMessage` (not `FetchMessage` — which blocks forever with consumer groups). Polled messages are split into chunks of `WORKER_POOL_SIZE`, and each chunk is dispatched as a separate batch. Ordered mode (`POOL=1`) processes one message at a time in strict offset order; multi-worker mode (`POOL>1`) processes chunks in parallel.
+
+<Callout type="info">
+Benchmark (2026-09-28, 1 pod, 1 Kafka partition): **6,017 msg/s at 0ms sink delay, ~4,000 msg/s at 50ms, ~800 msg/s in ordered mode** — all with zero drops and 13–23 MiB memory. See [Load Test Results](/benchmarking/load-test-results).
+</Callout>
 
 ### Contiguity-gated offsets
 Offset N is committed only when all messages up to N are processed. Prevents skipping messages on crash.
