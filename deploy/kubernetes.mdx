@@ -15,12 +15,27 @@ helm install goose ./helm \
   --set env.SINK_HTTP_SERVICE_URL=http://service:8080/api
 ```
 
+## Production Deployment
+
+```bash
+helm install goose ./helm \
+  --set image.tag=1.1.0 \
+  --set replicaCount=3 \
+  --set env.SINK_WORKER_POOL_SIZE=50 \
+  --set env.SOURCE_KAFKA_CONSUMER_CONFIG_MAX_POLL_RECORDS=500 \
+  --set networkPolicy.enabled=true \
+  --set podDisruptionBudget.enabled=true \
+  --set autoscaling.enabled=true \
+  --set autoscaling.minReplicas=3 \
+  --set autoscaling.maxReplicas=20
+```
+
 ## values.yaml
 
 ```yaml
 image:
   repository: ghcr.io/goose-kafka/goose
-  tag: latest
+  tag: 1.1.0
   pullPolicy: IfNotPresent
 
 replicaCount: 1
@@ -39,19 +54,79 @@ resources:
   limits:
     cpu: 500m
     memory: 128Mi
+
+# Security — applied to every pod by default
+securityContext: {}
+
+# Network isolation — opt-in
+networkPolicy:
+  enabled: false
+  ingressFrom:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: prometheus
+  egressKafkaPorts: [9092, 9093]
+  # egressHTTP:    # add CIDRs for your HTTP sink
+  # egressOTLP:    # add CIDRs for your OTel collector
+
+# PodDisruptionBudget — opt-in
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+# HPA — opt-in
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
 ```
 
 Goose uses 13–23 MiB under load (benchmarked 2026-09-28). The 128Mi limit leaves ample headroom.
 
-## Resources
+## Helm Resources
 
-The Helm chart creates:
+| Resource | Description | Default |
+|----------|-------------|---------|
+| `Deployment` | Goose pods with security context | Always |
+| `Service` | Metrics service (port 9090) for Prometheus | Always |
+| `ConfigMap` | Environment variables | Always |
+| `HPA` | Horizontal Pod Autoscaler (CPU-based) | `autoscaling.enabled=false` |
+| `NetworkPolicy` | Ingress/egress network restrictions | `networkPolicy.enabled=false` |
+| `PodDisruptionBudget` | Minimum availability during drains | `podDisruptionBudget.enabled=false` |
 
-| Resource | Description |
-|----------|-------------|
-| `Deployment` | Goose pods |
-| `Service` | Metrics service (port 9090) for Prometheus |
-| `ConfigMap` | Environment variables |
+## Security Context
+
+Every goose pod gets a restrictive security context by default:
+
+```yaml
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65532        # distroless nonroot UID
+  runAsGroup: 65532
+  capabilities:
+    drop: [ALL]
+  seccompProfile:
+    type: RuntimeDefault
+```
+
+This meets Kubernetes Pod Security Standards "restricted" level. No configuration needed — it's baked into the Deployment template.
+
+## NetworkPolicy
+
+Enable network isolation to restrict goose pod traffic:
+
+```bash
+helm install goose ./helm \
+  --set networkPolicy.enabled=true \
+  --set networkPolicy.egressHTTP[0].ipBlock.cidr=10.0.0.0/8
+```
+
+<Warning>
+Without `egressHTTP`, goose can only reach DNS and Kafka. You must configure egress to your HTTP sink's IP range, or goose won't be able to deliver messages.
+</Warning>
 
 ## Scaling
 
@@ -60,3 +135,26 @@ Scale by increasing `replicaCount` (capped by Kafka partitions):
 ```bash
 helm upgrade goose ./helm --set replicaCount=4
 ```
+
+Or enable HPA for automatic scaling:
+
+```bash
+helm upgrade goose ./helm \
+  --set autoscaling.enabled=true \
+  --set autoscaling.minReplicas=2 \
+  --set autoscaling.maxReplicas=20
+```
+
+<Callout type="info">
+HPA `maxReplicas` should not exceed Kafka partition count. Goose pods beyond partition count will be idle.
+</Callout>
+
+## Image Verification
+
+Goose images are signed with Cosign (sigstore). Verify before deploying:
+
+```bash
+cosign verify ghcr.io/goose-kafka/goose:v1.1.0
+```
+
+SBOM (Software Bill of Materials) is available as a release asset on [GitHub Releases](https://github.com/Goose-Kafka/goose/releases).

@@ -48,6 +48,9 @@ Goose is a cloud-native Kafka consumer that delivers streaming data to multiple 
   <Accordion title="Full Observability">
     15 Prometheus metrics, OpenTelemetry traces (Jaeger/Tempo), Loki log aggregation, and 3 pre-built Grafana dashboards.
   </Accordion>
+  <Accordion title="Production Hardened">
+    Cosign image signing, SBOM (SPDX), Trivy vulnerability scanning, security context (nonroot, readonly FS, drop ALL caps), NetworkPolicy, PodDisruptionBudget, Dependabot.
+  </Accordion>
 </AccordionGroup>
 
 ## Quick Links
@@ -70,6 +73,9 @@ Goose is a cloud-native Kafka consumer that delivers streaming data to multiple 
   </Card>
   <Card title="Deploy" icon="cloud" href="/deploy/kubernetes">
     Helm chart, Docker, K8s
+  </Card>
+  <Card title="Security" icon="lock" href="/deploy/security">
+    Cosign signing, SBOM, Trivy, NetworkPolicy
   </Card>
   <Card title="Benchmarks" icon="chart" href="/benchmarking/load-test-results">
     Load test results and performance numbers

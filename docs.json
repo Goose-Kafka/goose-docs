@@ -79,7 +79,8 @@
             "group": "Deploy",
             "pages": [
               "deploy/docker",
-              "deploy/kubernetes"
+              "deploy/kubernetes",
+              "deploy/security"
             ]
           },
           {
